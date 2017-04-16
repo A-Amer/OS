@@ -9,13 +9,12 @@ using namespace std;
 
 
 typedef struct RunProcess{
-    bool IsCpu;
+    bool IsCpu=false;
     float priority;
-    short CpuTime;
+    short CpuTime;//cpu time currently
     short ArrTime;
     Process * process;
-    
-    
+
 }RunProc;
 class Scheduler{
 public:
