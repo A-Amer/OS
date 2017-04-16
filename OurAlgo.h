@@ -9,13 +9,14 @@ class OurAlgo:public Scheduler {
     }
 public:
     OurAlgo(int ContextSwitch);
-    void InsertReady(Process * process);
-    CPU Schedule(); 
+    void InsertNewReady(Proc * process);
+    void InsertReady(Proc* process,int CurrTime);
+    CPUs Schedule(short CpuNo); 
 private:
-    priority_queue<RunProcess> IoBound;//for io bound processes
-    priority_queue<RunProcess> CpuBound;//for cpu bound processes
-    char IoQuant=2;
-    char CpuQuant=4;
+    priority_queue<RunProc> IoBound;//for io bound processes
+    priority_queue<RunProc> CpuBound;//for cpu bound processes
+    static char IoQuant=2;
+    static char CpuQuant=4;
      
 };
 

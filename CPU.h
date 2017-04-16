@@ -5,7 +5,7 @@ struct RunningTime
 {
 
 char type;
-int time=0;
+int time;
 
 
 };
@@ -20,11 +20,12 @@ typedef struct Process //process parameters
     int priroity;
     int arrivaltime;
 
-}Process;
+}Proc;
+
 typedef struct CPU { 
 int RemainingCycle;
 Process * process;
-};
+}CPUs;
 
 
 #endif /* CPU_H */
