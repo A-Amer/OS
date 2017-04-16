@@ -2,21 +2,34 @@
 #ifndef OURALGO_H
 #define OURALGO_H
 #include "Scheduler.h"
+#include <queue>
+#include <vector>
 
-class OurAlgo:public Scheduler {
-    bool operator<(const struct RunProcess& a, const struct RunProcess& b) {
+using namespace std;
+
+ bool operator<(const  RunProc& a, const  RunProc& b) {
         return a.priority<b.priority && a.ArrTime-b.ArrTime<=2;
     }
+ 
+class OurAlgo:public Scheduler {
+   
 public:
-    OurAlgo(int ContextSwitch);
+    OurAlgo(int ContextSwitch){
+        IoQuant=2;
+        CpuQuant=4;
+        if(IoQuant<ContextSwitch){
+            IoQuant=ContextSwitch+1;
+            CpuQuant=5;
+        } 
+    }
     void InsertNewReady(Proc * process);
     void InsertReady(Proc* process,int CurrTime);
     CPUs Schedule(short CpuNo); 
 private:
     priority_queue<RunProc> IoBound;//for io bound processes
     priority_queue<RunProc> CpuBound;//for cpu bound processes
-    static char IoQuant=2;
-    static char CpuQuant=4;
+    char IoQuant;
+    char CpuQuant;
      
 };
 

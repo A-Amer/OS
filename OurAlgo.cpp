@@ -1,64 +1,62 @@
+#include<cstdlib>
 #include"OurAlgo.h"
 
 
-OurAlgo::OurAlgo(int ContextSwitch){
-        if(IoQuant<ContextSwitch){
-            IoQuant=ContextSwitch+1;
-            CpuQuant=5;
-        } 
-    }
- OurAlgo::InsertNewReady(Proc * process){
+
+ void OurAlgo::InsertNewReady(Proc * process){
     int totalTime=0;
-    RunProc NewProcess=new RunProc;
+    RunProc* NewProcess=new RunProc;
     short io=0;
     for(int i=0;i<20;i++){
-        totalTime+=process->arr[i];
+        totalTime+=process->arr[i].time;
         if(i%2!=0)
-            io+=process->arr[i];
+            io+=process->arr[i].time;
     }
     
-    NewProcess.ArrTime=process->arrivaltime;
-    NewProcess.priority=process->priroity/totalTime;
-    NewProcess.process=process;
-    NewProcess.CpuTime=process->arr[0];
+    NewProcess->ArrTime=process->arrivaltime;
+    NewProcess->priority=process->priroity/totalTime;
+    NewProcess->process=process;
+    NewProcess->CpuTime=process->arr[0].time;
     if(io<totalTime-io)
-        NewProcess.IsCpu=true;
+        NewProcess->IsCpu=true;
     else
-        NewProcess.IsCpu=false;
-    if(NewProcess.IsCpu)
-        CpuBound.push(NewProcess);
+        NewProcess->IsCpu=false;
+    if(NewProcess->IsCpu)
+        CpuBound.push(*NewProcess);
     else
-        IoBound.push(NewProcess);
+        IoBound.push(*NewProcess);
     
 }
-OurAlgo:: InsertReady(Proc* process,int CurrTime){//we could find a way to save priority and iscpu
+void OurAlgo:: InsertReady(Proc* process,int CurrTime){//we could find a way to save priority and iscpu
     int totalTime=0;
-    RunProc NewProcess=new RunProc;
+    RunProc* NewProcess=new RunProc;
     short io=0;
     for(int i=0;i<20;i++){
-        totalTime+=process->arr[i];
+        totalTime+=process->arr[i].time;
         if(i%2!=0)
-            io+=process->arr[i];
+            io+=process->arr[i].time;
     }
     
-    NewProcess.ArrTime=CurrTime;
-    NewProcess.priority=process->priroity/totalTime;
-    NewProcess.process=process;
-    NewProcess.CpuTime=process->arr[process->index];
+    NewProcess->ArrTime=CurrTime;
+    NewProcess->priority=process->priroity/totalTime;
+    NewProcess->process=process;
+    NewProcess->CpuTime=process->arr[process->index].time;
     if(io<totalTime-io)
-        NewProcess.IsCpu=true;
+        NewProcess->IsCpu=true;
     else
-        NewProcess.IsCpu=false;
-    if(NewProcess.IsCpu)
-        CpuBound.push(NewProcess);
+        NewProcess->IsCpu=false;
+    if(NewProcess->IsCpu)
+        CpuBound.push(*NewProcess);
     else
-        IoBound.push(NewProcess);
+        IoBound.push(*NewProcess);
 }
- OurAlgo::Schedule(short CpuNo){
+CPUs OurAlgo::Schedule(short CpuNo){
+    CPUs Process;
+    Process.process=NULL;
      if(IoBound.empty()&& CpuBound.empty())
-         return 0;
+         return  Process;
      RunProc Scheduled;
-     CPUs Process;
+     
     if(CpuNo==1){
         if(!IoBound.empty()){
             Scheduled=IoBound.top();
