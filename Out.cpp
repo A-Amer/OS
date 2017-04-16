@@ -9,11 +9,11 @@
 #include"MessageQueue.h"
 
 using namespace std;
-void Stop(int);
+void Stop(int);//see if signal could send int
 void Continu(int);
 void Terminate(int);
 
-int count=1,PrevFinish=0,RecBuff,Arrival,wait=0;//clock for test
+int count=1/*instead of counter for now*/,PrevFinish=0,RecBuff,Arrival,wait=0;
 char FileName[15];
 ofstream MyFile;
 
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     RecBuff=msgget(2000,IPC_CREAT|0646);
     struct msgbuff m;
     m.mtype=getpid();
-    argc=msgrcv(RecBuff,&m,sizeof(struct msgbuff),getpid(),!IPC_NOWAIT);
+    argc=msgrcv(RecBuff,&m,sizeof(struct msgbuff),getpid(),!IPC_NOWAIT);//could be changed to arrgument
     sprintf(FileName, "Process_%d.txt", argc);
     Arrival=msgrcv(RecBuff,&m,sizeof(struct msgbuff),getpid(),!IPC_NOWAIT);
     wait+=(count-Arrival);
@@ -66,7 +66,7 @@ void Terminate(int dummy){
     struct KilledQ exit;
     exit.WTA=TurnAround;
     exit.wait=wait;
-    msgrcv(RecBuff,&exit,sizeof(struct KilledQ),getpid(),!IPC_NOWAIT);
+    msgrcv(RecBuff,&exit,sizeof(struct KilledQ),getpid(),!IPC_NOWAIT);//will be changed to shared memory
     raise(SIGKILL);
 }
 
