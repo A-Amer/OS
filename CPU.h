@@ -1,6 +1,8 @@
 
 #ifndef CPU_H
 #define CPU_H
+
+
 struct RunningTime
 {
 
@@ -24,7 +26,7 @@ typedef struct Process //process parameters
 
 typedef struct CPU { 
 int RemainingCycle;
-Process * process;
+Proc * process;
 }CPUs;
 
 

@@ -1,7 +1,13 @@
 #include<cstdlib>
 #include"OurAlgo.h"
 
-
+void OurAlgo::InsertNewReady(){
+    for(int i=1;i<=flag;i++){
+        InsertNewReady(ProcessArr+index+i);
+    }
+    index+=flag;
+    flag=0;//will be changed when flag is shared
+}
 
  void OurAlgo::InsertNewReady(Proc * process){
     int totalTime=0;

@@ -17,12 +17,14 @@ public:
     OurAlgo(int ContextSwitch){
         IoQuant=2;
         CpuQuant=4;
+        index=-1;
         if(IoQuant<ContextSwitch){
             IoQuant=ContextSwitch+1;
             CpuQuant=5;
         } 
     }
     void InsertNewReady(Proc * process);
+    void InsertNewReady();
     void InsertReady(Proc* process,int CurrTime);
     CPUs Schedule(short CpuNo); 
 private:
@@ -30,6 +32,7 @@ private:
     priority_queue<RunProc> CpuBound;//for cpu bound processes
     char IoQuant;
     char CpuQuant;
+    int index;
      
 };
 
