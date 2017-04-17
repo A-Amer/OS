@@ -23,17 +23,7 @@ void main()
 int shmid;
 void *shmaddr;
 key_t key=12345;
-shmid = shmget(key, 4096, IPC_CREAT|0644);
-  
-if(shmid == -1)
-  	{
-  	  perror("Error in create");
-  	  exit(-1);
-  	}
-  
-shmaddr = shmat(shmid, (void *)0, 0);//attaching memory
- Proc *address;
-address=(Proc *)shmaddr;
+
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -45,6 +35,17 @@ p_file =fopen("configuration file.txt","r"); //open configurration in Read Mode
  
 fscanf(p_file, "%d", &Number);
 struct Process  *ProcessArr= malloc( Number*sizeof(struct Process));
+shmid = shmget(key, Number*sizeof(Proc), IPC_CREAT|0644);
+  
+if(shmid == -1)
+  	{
+  	  perror("Error in create");
+  	  exit(-1);
+  	}
+  
+shmaddr = shmat(shmid, (void *)0, 0);//attaching memory
+ Proc *address;
+address=(Proc *)shmaddr;
 fclose(p_file);
 char  s[14]="process_x.txt";
 char  n[5];
@@ -61,72 +62,66 @@ c=fgetc(p_file);
  j=0;
 
 
-	while(c!=EOF)//reading fom each file its parameters
-	{
-		while(c=='#')  //ignoring comments line
-		{
-			c=fgetc(p_file);
+    while(c!=EOF)//reading fom each file its parameters
+    {
+            while(c=='#')  //ignoring comments line
+            {
+                    c=fgetc(p_file);
 
-			while(c!='\n')
-	
-			c=fgetc(p_file);
-	
+                    while(c!='\n')
 
-			c=fgetc(p_file);
-
-	          }
-
-		 if(c!=EOF)
-		    {
-
-			if(c=='s') //size
-				{
+                    c=fgetc(p_file);
 
 
-				fscanf(p_file,"%s %d",n, &d);
-				p.size=d;
+                    c=fgetc(p_file);
 
-				}
+              }
 
-			else if(c=='p' || c=='I'|| c=='C' || c=='c')  //PRINTER || I/O || CD || cpu
-				{
+             if(c!=EOF)
+                {
 
-				fscanf(p_file,"%s %d",n, &d);
-				p.arr[j].time=d;
-				p.arr[j].type=c;
-				j++;
+                    if(c=='s') //size
+                            {
 
 
-				}
+                            fscanf(p_file,"%s %d",n, &d);
+                            p.size=d;
+
+                            }
+
+                    else if(c=='p' || c=='I'|| c=='C' || c=='c')  //PRINTER || I/O || CD || cpu
+                            {
+
+                            fscanf(p_file,"%s %d",n, &d);
+                            p.arr[j].time=d;
+                            p.arr[j].type=c;
+                            j++;
 
 
-			else if(c=='a') //arrivaltime
-
-				{
-
-				fscanf(p_file,"%s %d",n, &d);
-				p.arrivaltime=d;
-
-				}
+                            }
 
 
+                    else if(c=='a') //arrivaltime
 
-		    }
-			    c=fgetc(p_file);
+                            {
 
-	}
+                            fscanf(p_file,"%s %d",n, &d);
+                            p.arrivaltime=d;
 
+                            }
 
+                }
+                        c=fgetc(p_file);
+    }
 
+    fclose(p_file);
 
-	fclose(p_file);
+    p.index=0;
+    p.pid=-1;
 
-	p.index=0;
-	p.pid=-1;
+    ProcessArr[ProcessNumber]=p;
 
-	ProcessArr[ProcessNumber]=p;
-
-	ProcessNumber++;
+    ProcessNumber++;
 
 //used for checking process 
 
