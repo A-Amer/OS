@@ -27,8 +27,7 @@ public:
    virtual CPUs Schedule(short CpuNo){} //CpuNo will be used by our algorithm(cpu1 io,cpu2 cpu)
       Scheduler(){
         int shmid;
-        key_t key=12345;
-        shmid = shmget(key, 4096, IPC_CREAT|0644);
+        shmid = shmget(12345, 4096, IPC_CREAT|0644);
         ProcessArr=(Proc*)shmat(shmid, (void *)0, 0);
     }
     ~Scheduler(){
