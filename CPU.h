@@ -28,11 +28,6 @@ typedef struct CPU {
 int RemainingCycle;
 Proc * process;
 }CPUs;
-typedef struct IoStruct { 
-    long mtype;
-    int RemainingCycle;
-    Proc * process;
-}IOs;
 
 
 #endif /* CPU_H */

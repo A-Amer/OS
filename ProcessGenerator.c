@@ -30,11 +30,11 @@ key_t key=12345;
 FILE *p_file;
 int Number,i,ProcessNumber=0,j;
 char c;
-struct Process p;
+Proc p;
 p_file =fopen("configuration file.txt","r"); //open configurration in Read Mode
  
 fscanf(p_file, "%d", &Number);
-struct Process  *ProcessArr= malloc( Number*sizeof(struct Process));
+struct Process  *ProcessArr= malloc( Number*sizeof(Proc));
 shmid = shmget(key, Number*sizeof(Proc), IPC_CREAT|0644);
   
 if(shmid == -1)
@@ -139,25 +139,25 @@ printf(" type= %c  time=%d",p.arr[x].type,p.arr[x].time);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-			j=0; //this is to check process turn to be arrived
+j=0; //this is to check process turn to be arrived
 
-			//wakes up to check arrival
+//wakes up to check arrival
 int count=0;
-                     for(i=0;i<Number && count==ProcessArr[j].arrivaltime;i++)
-                       
-			{
+ for(i=0;i<Number && count==ProcessArr[j].arrivaltime;i++)
+
+    {
 			     
               count++;
-	              address[j]=ProcessArr[j];
-			j++;
+              address[j]=ProcessArr[j];
+                j++;
 
 
-			}
-			if(count==0)
-				flag0=-1;
-			else
-               flag0=count;
-           
-           tail=address+j-1;
+                }
+                if(count==0)
+                   flag0=-1;
+                else
+                 flag0=count;
+
+   tail=address+j-1;
 
 }

@@ -6,7 +6,7 @@
 	char mtext[10];
     };
     struct KilledQ{
-        int wait,WTA;
+        int Wait,WTA;
         
     };
 
