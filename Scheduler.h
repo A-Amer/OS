@@ -22,9 +22,9 @@ protected:
     Proc* ProcessArr;
     int flag;//will be changed when flag is shared
 public:
-   virtual void InsertNewReady(){}
-   virtual void InsertReady(Proc* process,int CurrTime){}
-   virtual CPUs Schedule(short CpuNo){} //CpuNo will be used by our algorithm(cpu1 io,cpu2 cpu)
+   virtual void InsertNewReady(Proc * p1,Proc * p2)=0;
+   virtual void InsertReady(Proc* process,int CurrTime)=0;
+   virtual CPUs Schedule(short CpuNo)=0; //CpuNo will be used by our algorithm(cpu1 io,cpu2 cpu)
       Scheduler(){
         int shmid;
         shmid = shmget(12345, 4096, IPC_CREAT|0644);

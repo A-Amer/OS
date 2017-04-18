@@ -24,7 +24,7 @@ public:
         } 
     }
     void InsertNewReady(Proc * process);
-    void InsertNewReady();
+    void InsertNewReady(Proc * p1,Proc * p2);
     void InsertReady(Proc* process,int CurrTime);
     CPUs Schedule(short CpuNo); 
 private:

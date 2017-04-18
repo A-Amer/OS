@@ -11,17 +11,13 @@ RoundRobin::RoundRobin(int q,int number) {
 	for (int  i=0;i<n;i++)
 		Queue[i]=NULL;
 }
-void RoundRobin::InsertNewReady(){
-  Process  * ptr=ptail-flag; //where tail is from process generator pointer to last element in shared memory
-		
-		
+void RoundRobin::InsertNewReady(Proc * p1,Proc * p2){
+             Proc  * ptr=ptail-flag; //where tail is from process generator pointer to last element in shared memory
 		while(flag!=0)
 		{
-			
 			InsertReady(ptr,0);
 			ptr++;
 			flag--;
-			
 		}
 }
 void RoundRobin:: InsertReady(Proc* process,int CurrTime){

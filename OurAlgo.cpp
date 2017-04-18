@@ -1,7 +1,7 @@
 #include<cstdlib>
 #include"OurAlgo.h"
 
-void OurAlgo::InsertNewReady(){
+void OurAlgo::InsertNewReady(Proc * p1,Proc * p2){
     for(int i=1;i<=flag;i++){
         InsertNewReady(ProcessArr+index+i);
     }

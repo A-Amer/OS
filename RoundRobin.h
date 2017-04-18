@@ -6,7 +6,7 @@
 class RoundRobin:public Scheduler {
 public:
     RoundRobin(int q,int number);
-    void InsertNewReady();
+    void InsertNewReady(Proc * p1,Proc * p2);
     void InsertReady(Proc* process,int CurrTime);
     CPUs Schedule(short CpuNo);
     int  RR(Proc *p); //returns running time
