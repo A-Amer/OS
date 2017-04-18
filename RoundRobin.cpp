@@ -1,7 +1,7 @@
 
 #include "RoundRobin.h"
 #include <stdlib.h>
-
+Proc ptail; // from process generator
 RoundRobin::RoundRobin(int q,int number) {
          head=-1;
 	tail=0;
@@ -12,14 +12,14 @@ RoundRobin::RoundRobin(int q,int number) {
 		Queue[i]=NULL;
 }
 void RoundRobin::InsertNewReady(){
-//    Process  * ptr=tail-flag; //where tail is from process generator pointer to last element in shared memory
+  Process  * ptr=ptail-flag; //where tail is from process generator pointer to last element in shared memory
 		
 		
 		while(flag!=0)
 		{
 			
-			InsertReady(Queue[tail],0);
-			tail++;
+			InsertReady(ptr,0);
+			ptr++;
 			flag--;
 			
 		}
