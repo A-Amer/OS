@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     sleep(500);
     PID=fork();
     if(PID==0){//start with Process Generator
-        execve("Dispatch",NULL,NULL);
+        execve("Dispatcher",NULL,NULL);
     }
     PID=fork();
     if(PID==0){//start with Process Generator

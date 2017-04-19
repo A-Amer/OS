@@ -28,10 +28,11 @@ int main(int argc, char** argv) {
     FileName.append(".txt");
     Arrival=atoi(argv[2]);
     WorkOn=argv[3];
-    Wait+=(count-Arrival);
+    
     //////////////////////////////
     int shmid=shmget(CounterKey,sizeof(int),IPC_CREAT|0644);
     count=(int*)shmat(shmid, (void *)0, 0);
+    Wait+=(*count-Arrival);
     //////////////////////////////
     signal(SIGTSTP,Stop);
     signal(SIGUSR1,Continu);
@@ -66,14 +67,25 @@ void Stop(int dummy){
     MyFile.open(FileName.c_str(),ios::app);
     MyFile<<*count<<"]"<<WorkOn<<"\n";
     MyFile.close();
-    PrevFinish=count;
+    PrevFinish=*count;
     raise(SIGSTOP);
 }
 void Continu(int dummy){
     struct msgbuff m;
     m.mtype=getpid();
     msgrcv(RecBuff,&m,sizeof(struct msgbuff),getpid(),!IPC_NOWAIT);
-    WorkOn=m.mtext;
+    if(m.mtext[0]==IO){
+        WorkOn="IO";
+    }
+    else if(m.mtext[0]==Printer){
+        WorkOn="printer";
+    }
+    else if(m.mtext[0]==CD){
+        WorkOn="CD";
+    }
+    else{
+        WorkOn=m.mtext;
+    }
     if(WorkOn=="CPU_1"){
         MyFile.open("CPU_1.txt",ios::app); 
         MyFile<<"["<<*count<<":";
@@ -87,10 +99,10 @@ void Continu(int dummy){
     MyFile.open(FileName.c_str(),ios::app);
     MyFile<<"["<<*count<<":";
     MyFile.close();
-    Wait+=(count-PrevFinish);
+    Wait+=(*count-PrevFinish);
 }
 void Terminate(int dummy){
-    int TurnAround=count-Arrival;
+    int TurnAround=*count-Arrival;
     MyFile.open(FileName.c_str(),ios::app);
     MyFile<<"turn_around ="<<TurnAround<<"\n";
     TurnAround=TurnAround/(TurnAround-Wait);

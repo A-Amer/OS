@@ -28,6 +28,10 @@ typedef struct CPU {
 int RemainingCycle;
 Proc * process;
 }CPUs;
+typedef struct ConfigFile{
+    long  mtype;
+    int Numbers[5];
+}Config;
 
 
 

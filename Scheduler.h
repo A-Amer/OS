@@ -10,15 +10,8 @@
 #include"Defines.h"
 #include"LinkedList.h"
 
-typedef struct RunProcess{
-    bool IsCpu;
-    float priority;
-    short CpuTime;//cpu time currently
-    short ArrTime;
-    Proc * process;
-    
 
-}RunProc;
+ 
 class Scheduler{
  
 protected:

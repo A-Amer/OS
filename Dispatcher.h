@@ -3,6 +3,7 @@
 #define DISPATCHER_H
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
 #include<cstdlib>
@@ -13,8 +14,6 @@
 #include"Scheduler.h"
 
 using namespace std;
-
-enum{Io,CD,Printer};
 
 class Dispatcher {
 public:
@@ -34,6 +33,7 @@ public:
 private:
     CPU Cpu[2];
     Scheduler *Schd;
+    int CpuUtaliz[2];
     
     CPU Switch[2];
     Process * SendToIO[2];
@@ -46,6 +46,8 @@ private:
     int ContextSwitchingTime;
     
     int * flaginserted;
+    KilledQ * KilledP;
+    int * Counter;
     int ToIOQueue;
     int FromIOQueue;
     int ToProcQueue;

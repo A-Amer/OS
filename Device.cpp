@@ -49,7 +49,7 @@ int main() {
                     x=msgrcv(RecvBuff,&Next,sizeof( IOs),CD,IPC_NOWAIT);
                 }
                 if(x!=-1){
-                    Next.RemainingCycle=Next.process->arr[Next.process->index];
+                    Next.RemainingCycle=Next.process->arr[Next.process->index].time;
                     DeviceArr[i]=Next;
                     CountSend++;
                 }
@@ -62,6 +62,7 @@ int main() {
         msgsnd(SendBuff,&Intg,sizeof(SendInteger),!IPC_NOWAIT);
         for(int i=0;i<4;i++){
             if(Send[i]!=NULL){
+                Send[i]->index++;
                 SendProc Snd;
                 Snd.P=Send[i];
                 msgsnd(SendBuff,&Snd,sizeof(SendProc),!IPC_NOWAIT);

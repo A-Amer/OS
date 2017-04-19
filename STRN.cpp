@@ -233,14 +233,14 @@ void STRN::InsertNewReady(CPU c1, CPU c2, LinkedList BlockedList, int MemoryAvai
         index++;
         ptr++;
     }
-    IOs IO;//change this to proc struct
+    IOs device;//change this to proc struct
     int sizercv;
     while(IOReturnNo != 0)
     {
-        sizercv = msgrcv(FromIOQueue,&IO,sizeof(IOs),0,!IPC_NOWAIT);
+        sizercv = msgrcv(FromIOQueue,&device,sizeof(IOs),0,!IPC_NOWAIT);
             if(sizercv == -1)
                 cout << "\nreceiving failed!";
-        ChooseProc.Insert(IO.process);
+        ChooseProc.Insert(device.process);
         IOReturnNo--;
     }
     

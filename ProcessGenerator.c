@@ -1,9 +1,11 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include<sys/shm.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <sys/file.h>
 #include <sys/shm.h>
 #define STDIN_FILENO   0 
@@ -29,7 +31,7 @@ key_t key=12345;
 //////////////////////////////////////////////////////////////////////////////////
 
 FILE *p_file;
-int Number,i,ProcessNumber=0,j;
+int Number[5],i,ProcessNumber=0,j;
 char c;
 Proc p;
 shmid=shmget(FlagKey,sizeof(int), IPC_CREAT|0644);
@@ -39,10 +41,34 @@ shmid=shmget(CounterKey,sizeof(int),IPC_CREAT|0644);
 counter=(int*)shmat(shmid, (void *)0, 0);
 
 p_file =fopen("configuration file.txt","r"); //open configurration in Read Mode
-fscanf(p_file, "%d", &Number);
-struct Process  *ProcessArr= malloc( Number*sizeof(Proc));
-shmid = shmget(key, Number*sizeof(Proc), IPC_CREAT|0644);
+i=0;
+c=fgetc(p_file);
+while(c!=EOF)//reading fom each file its parameters
+    {
+     while(c=='#')  //ignoring comments line
+            {
+                    c=fgetc(p_file);
 
+                    while(c!='\n')
+
+                    c=fgetc(p_file);
+
+
+                    c=fgetc(p_file);
+
+              }
+    fscanf(p_file, "%d", &Number[i]);
+    i++;
+}
+struct Process  *ProcessArr= malloc( Number[0]*sizeof(Proc));
+shmid = shmget(key, Number[0]*sizeof(Proc), IPC_CREAT|0644);
+int init=msgget(QKey,IPC_CREAT|0666);
+Config con;
+for(i=0;i<5;i++){
+    con.Numbers[i]=Number[i];
+}
+con.mtype=3;
+msgsnd(init,&con,sizeof(Config),!IPC_NOWAIT);
   
 if(shmid == -1)
   	{
@@ -58,7 +84,7 @@ char  s[14]="process_x.txt";
 char  n[5];
 int d;
 ////////////////////////////////////////////////////////////////////////////////////
-for(i=1;i<=Number;i++)
+for(i=1;i<=Number[0];i++)
 {
     s[8]=i+'0';
 
@@ -149,9 +175,9 @@ printf(" type= %c  time=%d",p.arr[x].type,p.arr[x].time);
 j=0; //this is to check process turn to be arrived
 
 //wakes up to check arrival
-while(j<Number){
+while(j<Number[0]){
     int count=0;
-    for(i=0;i<Number && *counter==ProcessArr[j].arrivaltime;i++)
+    for(i=0;i<Number[0] && *counter==ProcessArr[j].arrivaltime;i++)
 
     {		     
       count++;
@@ -168,7 +194,7 @@ while(j<Number){
 }
 sleep(500);
 shmid=shmget(FlagKey,sizeof(int), IPC_CREAT|0644);
-shmctl(shmid, IPC_RMID, (shmid_ds*)0);
+shmctl(shmid, IPC_RMID,0);
 shmdt(address);
 shmdt(counter);
 }

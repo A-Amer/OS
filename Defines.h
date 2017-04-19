@@ -3,9 +3,9 @@
 #define CounterKey 0x8000//global counter
 #define BlockedQKey 3500//IO blocked queue
 #define ToReadyQKey 4000//Queue of processes returned form IO
-#define I_O          0//message id for io
-#define Printers     1//message id for printer
-#define CDs          2//message id for cd
+#define IO          'I'//message id for io
+#define Printer     'p'//message id for printer
+#define CD          'C' //message id for cd
 #define flg         3//message id for flag
 #define QKey        2000//Key for message queue between processes and dispatcher
 #define SharedQ     0x500// done processes(for statistics)

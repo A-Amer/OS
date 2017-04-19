@@ -6,10 +6,18 @@
 #include <vector>
 
 using namespace std;
-
- bool operator<(const  RunProc& a, const  RunProc& b) {
+class RunProc{
+public:
+    bool IsCpu;
+    float priority;
+    short CpuTime;//cpu time currently
+    short ArrTime;
+    Proc * process;
+    friend bool operator<(const  RunProc& a, const  RunProc& b) {
         return a.priority<b.priority && a.ArrTime-b.ArrTime<=2;
-    }
+ }
+};
+
  
 class OurAlgo:public Scheduler {
    
