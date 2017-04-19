@@ -5,7 +5,10 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
-
+#include<sys/msg.h>
+#include <unistd.h>
+#include"Defines.h"
+#include"LinkedList.h"
 
 typedef struct RunProcess{
     bool IsCpu;
@@ -20,18 +23,25 @@ class Scheduler{
  
 protected:
     Proc* ProcessArr;
-    int flag;//will be changed when flag is shared
+    int* flag;
+    int FromIOQueue;
+    int index;
 public:
-   virtual void InsertNewReady(Proc * p1,Proc * p2)=0;
-   virtual void InsertReady(Proc* process,int CurrTime)=0;
+   virtual void InsertNewReady(CPU c1,CPU c2, LinkedList BlockedList, int MemoryAvailable,int IOReturnNo)=0;
+   virtual void InsertReady(Proc* process)=0;
    virtual CPUs Schedule(short CpuNo)=0; //CpuNo will be used by our algorithm(cpu1 io,cpu2 cpu)
       Scheduler(){
         int shmid;
-        shmid = shmget(12345, 4096, IPC_CREAT|0644);
+        index=-1;
+        FromIOQueue = msgget(ToReadyQKey,IPC_CREAT|0666);
+        shmid=shmget(FlagKey,sizeof(int), IPC_CREAT|0644);
+        flag=(int*)shmat(shmid, (void *)0, 0);
+        shmid = shmget(ProcArrKey, sizeof(Proc), IPC_CREAT|0644);
         ProcessArr=(Proc*)shmat(shmid, (void *)0, 0);
     }
     ~Scheduler(){
-        shmdt(ProcessArr);
+        int shmid = shmget(ProcArrKey, sizeof(Proc), IPC_CREAT|0644);
+        shmctl(shmid, IPC_RMID, (shmid_ds*)0);
     } 
 };
 

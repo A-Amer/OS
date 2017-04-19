@@ -30,5 +30,6 @@ Proc * process;
 }CPUs;
 
 
+
 #endif /* CPU_H */
 

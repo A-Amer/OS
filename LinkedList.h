@@ -3,6 +3,7 @@
 #ifndef LINKEDLIST_H
 #define LINKEDLIST_H
 #include<cstdlib>
+#include"CPU.h"
     struct Node
     {
 
@@ -19,7 +20,7 @@
         Node *tail;
         int count;
     public:
-     void LinkedList()
+     LinkedList()
     {
          head=NULL;
         tail=NULL;
@@ -47,11 +48,40 @@
     }
     return;
 }
+    void DeleteHead()
+{
+    if(count==1)
+    {
+        delete head;
+        head=NULL;
+        tail=NULL;
+    }
+    else
+    {
+        Node* temp = head;
+        head = head->next;
+        delete temp;
+    }
+    count--;
+}
 
 void Delete(Node* p1,Node * p2)
 
 {
-    p1->next=p2->next;
+    if(p2==head){
+        head=p2->next;
+    }
+    else if(p2==tail){
+        Node*temp=head;
+        while(temp->next->next!=NULL){
+            temp=temp->next;
+        }
+        tail=temp;
+        temp->next=NULL;
+    }
+    else{
+        p1->next=p2->next;
+    }
     delete p2;
     count--;
 }

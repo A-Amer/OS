@@ -23,16 +23,15 @@ public:
             CpuQuant=5;
         } 
     }
-    void InsertNewReady(Proc * process);
-    void InsertNewReady(Proc * p1,Proc * p2);
-    void InsertReady(Proc* process,int CurrTime);
+    void InsertNewReady(CPU c1,CPU c2, LinkedList BlockedList, int MemoryAvailable,int IOReturnNo);
+    void InsertReady(Proc* process);
     CPUs Schedule(short CpuNo); 
 private:
     priority_queue<RunProc> IoBound;//for io bound processes
     priority_queue<RunProc> CpuBound;//for cpu bound processes
     char IoQuant;
     char CpuQuant;
-    int index;
+   
      
 };
 

@@ -5,10 +5,10 @@
 #include"Scheduler.h"
 class HPF :public Scheduler{
 public:
-   void InsertNewReady(Proc * p1,Proc * p2);
-    void InsertReady(Proc* process,int CurrTime);
+   void InsertNewReady(CPU c1,CPU c2, LinkedList BlockedList, int MemoryAvailable,int IOReturnNo);
+    void InsertReady(Proc* process);
     CPUs Schedule(short CpuNo);
-    int HPF(Process *p);
+    int HiPF(Process* &p);
 private:
     LinkedList List;
 };

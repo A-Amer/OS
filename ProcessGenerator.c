@@ -8,13 +8,14 @@
 #include <sys/shm.h>
 #define STDIN_FILENO   0 
 #define STDOUT_FILENO  1
+#include"Defines.h"
 #include"CPU.h"
 
 Proc * tail=NULL;
 
-int counter; //timer
+int* counter; //timer
 
-int flag0;//used to tell how many process arrived currently
+int* flag;//used to tell how many process arrived currently
 
 void main()
 {
@@ -31,11 +32,17 @@ FILE *p_file;
 int Number,i,ProcessNumber=0,j;
 char c;
 Proc p;
+shmid=shmget(FlagKey,sizeof(int), IPC_CREAT|0644);
+flag=(int*)shmat(shmid, (void *)0, 0);
+
+shmid=shmget(CounterKey,sizeof(int),IPC_CREAT|0644);
+counter=(int*)shmat(shmid, (void *)0, 0);
+
 p_file =fopen("configuration file.txt","r"); //open configurration in Read Mode
- 
 fscanf(p_file, "%d", &Number);
 struct Process  *ProcessArr= malloc( Number*sizeof(Proc));
 shmid = shmget(key, Number*sizeof(Proc), IPC_CREAT|0644);
+
   
 if(shmid == -1)
   	{
@@ -53,13 +60,13 @@ int d;
 ////////////////////////////////////////////////////////////////////////////////////
 for(i=1;i<=Number;i++)
 {
-s[8]=i+'0';
+    s[8]=i+'0';
 
 
-p_file =fopen(s,"r");
-c=fgetc(p_file);
+    p_file =fopen(s,"r");
+    c=fgetc(p_file);
 
- j=0;
+    j=0;
 
 
     while(c!=EOF)//reading fom each file its parameters
@@ -142,22 +149,26 @@ printf(" type= %c  time=%d",p.arr[x].type,p.arr[x].time);
 j=0; //this is to check process turn to be arrived
 
 //wakes up to check arrival
-int count=0;
- for(i=0;i<Number && count==ProcessArr[j].arrivaltime;i++)
+while(j<Number){
+    int count=0;
+    for(i=0;i<Number && *counter==ProcessArr[j].arrivaltime;i++)
 
-    {
-			     
-              count++;
-              address[j]=ProcessArr[j];
-                j++;
+    {		     
+      count++;
+      address[j]=ProcessArr[j];
+      j++;
+    }
+    if(count==0)
+      *flag=-1;
+    else
+      *flag=count;
 
-
-                }
-                if(count==0)
-                   flag0=-1;
-                else
-                 flag0=count;
-
-   tail=address+j-1;
-
+    tail=address+j-1;
+    pause();
+}
+sleep(500);
+shmid=shmget(FlagKey,sizeof(int), IPC_CREAT|0644);
+shmctl(shmid, IPC_RMID, (shmid_ds*)0);
+shmdt(address);
+shmdt(counter);
 }

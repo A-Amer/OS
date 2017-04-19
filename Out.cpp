@@ -8,20 +8,19 @@
 #include<sys/msg.h>
 #include <unistd.h>
 #include"MessageQueue.h"
-
-#define QKey 2000
-#define SharedQ 0x500
+#include"Defines.h"
 
 using namespace std;
 void Stop(int);//see if signal could send int
 void Continu(int);
 void Terminate(int);
 
-int count=1,PrevFinish=0,RecBuff,Arrival,Wait=0;
+int* count;
+int PrevFinish=0,RecBuff,Arrival,Wait=0;
 int ProcNum;
 string FileName="Process_";
 ofstream MyFile;
-char WorkOn[15];
+char* WorkOn;
 int main(int argc, char** argv) {
     RecBuff=msgget(QKey,IPC_CREAT|0646);
     ProcNum=atoi(argv[1]);
@@ -29,10 +28,13 @@ int main(int argc, char** argv) {
     FileName.append(".txt");
     Arrival=atoi(argv[2]);
     WorkOn=argv[3];
-    wait+=(count-Arrival);
+    Wait+=(count-Arrival);
+    //////////////////////////////
+    int shmid=shmget(CounterKey,sizeof(int),IPC_CREAT|0644);
+    count=(int*)shmat(shmid, (void *)0, 0);
     //////////////////////////////
     signal(SIGTSTP,Stop);
-    signal(SIGCONT,Continu);
+    signal(SIGUSR1,Continu);
     signal(SIGINT,Terminate);
     /////////////////////////////////
     if(WorkOn=="CPU_1"){
@@ -41,11 +43,10 @@ int main(int argc, char** argv) {
     else{
         MyFile.open("CPU_2.txt",ios::trunc);
     }
-    MyFile<<"["<<count<<":";
+    MyFile<<"["<<*count<<":";
     MyFile.close();
-    MyFile.open(FileName,ios::trunc);
-    MyFile<<"["<<count<<":";
-    count++;
+    MyFile.open(FileName.c_str(),ios::trunc);
+    MyFile<<"["<<*count<<":";
     MyFile.close();
     while(true);
     return 0;
@@ -53,20 +54,19 @@ int main(int argc, char** argv) {
 void Stop(int dummy){
     if(WorkOn=="CPU_1"){
         MyFile.open("CPU_1.txt",ios::app); 
-        MyFile<<count<<"] Process_"<<ProcNum<<"\n";
+        MyFile<<*count<<"] Process_"<<ProcNum<<"\n";
         MyFile.close();
     }
     else if(WorkOn=="CPU_2"){
         MyFile.open("CPU_2.txt",ios::app);
-        MyFile<<count<<"] Process_"<<ProcNum<<"\n";
+        MyFile<<*count<<"] Process_"<<ProcNum<<"\n";
         MyFile.close();
     }
    
-    MyFile.open(FileName,ios::app);
-    MyFile<<count<<"]"<<WorkOn<<"\n";
+    MyFile.open(FileName.c_str(),ios::app);
+    MyFile<<*count<<"]"<<WorkOn<<"\n";
     MyFile.close();
     PrevFinish=count;
-    count++;
     raise(SIGSTOP);
 }
 void Continu(int dummy){
@@ -76,23 +76,22 @@ void Continu(int dummy){
     WorkOn=m.mtext;
     if(WorkOn=="CPU_1"){
         MyFile.open("CPU_1.txt",ios::app); 
-        MyFile<<"["<<count<<":";
+        MyFile<<"["<<*count<<":";
         MyFile.close();
     }
     else if(WorkOn=="CPU_2"){
         MyFile.open("CPU_2.txt",ios::app);
-        MyFile<<"["<<count<<":";
+        MyFile<<"["<<*count<<":";
         MyFile.close();
     }
-    MyFile.open(FileName,ios::app);
-    MyFile<<"["<<count<<":";
+    MyFile.open(FileName.c_str(),ios::app);
+    MyFile<<"["<<*count<<":";
     MyFile.close();
     Wait+=(count-PrevFinish);
-    count++;
 }
 void Terminate(int dummy){
     int TurnAround=count-Arrival;
-    MyFile.open(FileName,ios::app);
+    MyFile.open(FileName.c_str(),ios::app);
     MyFile<<"turn_around ="<<TurnAround<<"\n";
     TurnAround=TurnAround/(TurnAround-Wait);
     MyFile<<"weighted_turn_around = "<<TurnAround<<"\n";
@@ -104,6 +103,7 @@ void Terminate(int dummy){
     KilledQ* AddKilled=(KilledQ*)shmat(shmid, (void *)0, 0);
     AddKilled[ProcNum]=exit;
     shmdt(AddKilled);
+    shmdt(count);
     raise(SIGKILL);
 }
 

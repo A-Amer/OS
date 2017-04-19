@@ -1,4 +1,3 @@
-
 #ifndef STRN_H
 #define STRN_H
 #include"Scheduler.h"
@@ -6,12 +5,14 @@
 class STRN :public Scheduler{
 public:
     
-    void InsertNewReady(Proc * p1,Proc * p2);
-    void InsertReady(Proc* process,int CurrTime=0);
+    void InsertNewReady(CPU c1,CPU c2, LinkedList BlockedList, int MemoryAvailable,int IOReturnNo);
+    void InsertReady(Proc* process);
     CPUs Schedule(short CpuNo);
 private:
     LinkedList l;
+    Proc * ptail;
 };
 
 #endif /* STRN_H */
+
 
