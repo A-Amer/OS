@@ -9,18 +9,17 @@
 
 Dispatcher::Dispatcher(int CST,int Memory,int MaxPNo, Scheduler *S)
 {
-    Dispatcher::ProcessCounter = 0;
     ContextSwitchingTime = CST;
     MemoryAvailable = Memory;
     TotProcessesNo = MaxPNo;
     ToIOQueue = msgget(BlockedQKey,IPC_CREAT|0666);
     FromIOQueue = msgget(ToReadyQKey,IPC_CREAT|0666);
     ToProcQueue = msgget(QKey,IPC_CREAT|0666);
-    shmget(SharedQ, MaxPNo*sizeof(KilledQ), IPC_CREAT|0644);
-    int shmid=shmget(FlagKey,sizeof(int), IPC_CREAT|0644);
-    flaginserted=(int*)shmat(shmid, (void *)0, 0);
-    shmid = shmget(SharedQ, MaxPNo*sizeof(KilledQ), IPC_CREAT|0644);
+    int shmid = shmget(SharedQ, MaxPNo*sizeof(KilledQ), IPC_CREAT|0644);
     KilledP = (KilledQ*)shmat(shmid, (void *)0, 0);
+    shmid=shmget(FlagKey,sizeof(int), IPC_CREAT|0644);
+    flaginserted=(int*)shmat(shmid, (void *)0, 0);
+    
     CpuUtaliz[0]=0;
     CpuUtaliz[1]=0;
     shmid=shmget(CounterKey,sizeof(int),IPC_CREAT|0644);
@@ -32,11 +31,15 @@ Dispatcher::Dispatcher(int CST,int Memory,int MaxPNo, Scheduler *S)
 Dispatcher::~Dispatcher() 
 {
     delete Schd;
-    kill(getpgrp(),SIGINT);
+    shmdt(flaginserted);
     int shmid = shmget(SharedQ, TotProcessesNo *sizeof(KilledQ), IPC_CREAT|0644);
     shmctl(shmid, IPC_RMID, (shmid_ds*)0);
     msgctl(ToProcQueue,IPC_RMID,0);
-    
+    int id=msgget(BlockedQKey,IPC_CREAT|0646);
+    msgctl(id,IPC_RMID,0);
+    id=msgget(ToReadyQKey,IPC_CREAT|0646);
+    msgctl(id,IPC_RMID,0);
+   
 }
 
 void Dispatcher::CheckSwitch(Process* P, int CpuNo)
@@ -49,6 +52,7 @@ void Dispatcher::CheckSwitch(Process* P, int CpuNo)
     }
     else
     {
+       
         kill(P->pid,SIGTSTP);
         Cpu[CpuNo].process = NULL;      
         Cpu[CpuNo].RemainingCycle = ContextSwitchingTime;
@@ -58,9 +62,11 @@ void Dispatcher::CheckSwitch(Process* P, int CpuNo)
 
 void Dispatcher::EndOfSeq(Process* P, int CpuNo)
 {
-    if((sizeof(P->arr)/sizeof(struct RunningTime))-1==(P->index))
+    if(P->arr[P->index+1].type==0)
         {
+  
             kill(P->pid,SIGINT);
+           
             MemoryAvailable += P-> size;
             KilledProcNo++;
             ReturnFromBlocked();
@@ -69,33 +75,38 @@ void Dispatcher::EndOfSeq(Process* P, int CpuNo)
         {
             P->index++;
             SendToIO[CpuNo]=P;
+            kill(P->pid,SIGTSTP);
+            
         }  
 }
 
-void Dispatcher::SendProcToIO(int CpuNo,SendInteger FIO)
+void Dispatcher::SendProcToIO(int CpuNo,IOs FIO)
 {
+    IOs send;
+    send.mtype = SendToIO[CpuNo]->arr[SendToIO[CpuNo]->index].type;
+    send.process = SendToIO[CpuNo]->pid;
+    send.RemainingCycle=SendToIO[CpuNo]->arr[SendToIO[CpuNo]->index].time;
+
+    int sendcheck = msgsnd(ToIOQueue,&send,sizeof(IOs),!IPC_NOWAIT);
+    if(sendcheck==-1)
+        cout<<"\nsending to io failed";
     msgbuff m;
-    m.mtype = Cpu[CpuNo].process-> pid;
-    m.mtext[0]=Cpu[CpuNo].process->arr[Cpu[CpuNo].process->index].type;//set**
-    int sendflag = msgsnd(ToProcQueue,&m,sizeof(struct msgbuff),!IPC_NOWAIT);
+    m.mtype = SendToIO[CpuNo]-> pid;
+    m.mtext[0]=SendToIO[CpuNo]->arr[SendToIO[CpuNo]->index].type;
+    m.mtext[1]='\0';
+    printf("\n sending to pid %d", (int)m.mtype);
+    
+    int sendflag = msgsnd(ToProcQueue,&m,sizeof(m.mtext),!IPC_NOWAIT);
     if(sendflag==-1)
         cout<<"\nsending failed";
     //signal process to continue
-    kill(Cpu[CpuNo].process-> pid,SIGUSR1);
-    
-    IOs send;
-    send.mtype = SendToIO[CpuNo]->arr[SendToIO[CpuNo]->index].type;
-    send.process = SendToIO[CpuNo];
-    int sendcheck = msgsnd(ToIOQueue,&send,sizeof(IOs),!IPC_NOWAIT);
-    if(sendcheck==-1)
-        cout<<"\nsending failed";
-    FIO.flag++;                        
-    SendToIO[CpuNo]==NULL;
+                      
+    SendToIO[CpuNo]=NULL;
 }
 
 void Dispatcher::RemoveProcess(Process * P,int CpuNo)
 {    
-    if (P->arr[P->index].time==0)
+    if (P->arr[P->index].time<=0)
     {
         EndOfSeq( P, CpuNo);
         PrepareProcess(CpuNo);
@@ -104,6 +115,7 @@ void Dispatcher::RemoveProcess(Process * P,int CpuNo)
     }
     else
     {
+        cout<<"\nreturned in ready";
         Schd->InsertReady(P);
         PrepareProcess(CpuNo);
         CheckSwitch(Cpu[CpuNo].process,CpuNo);
@@ -154,19 +166,26 @@ void Dispatcher::RunProcess(int CpuNo)
         //check if it is the first run 
         if((Cpu[CpuNo].process-> pid) == -1)
         {
-            ProcessCounter++;
+            
             int PID = fork();
             if(PID==0)
             {
                 char Pcount[5];
                 char Arrival[5];
                 char CpuNum[10];
-                sprintf(Pcount, "%d", ProcessCounter);
-                sprintf(CpuNum, "CPU_%d", CpuNo);
+                 sprintf(Pcount, "%d",Cpu[CpuNo].process->Pnum);
+                CpuNum[0] = 'c';
+                CpuNum[1] = 'p';
+                CpuNum[2] = 'u';
+                CpuNum[3] = '_';
+                CpuNum[4]=CpuNo+1+'0';
+                CpuNum[5]='\0';
                 sprintf(Arrival, "%d", Cpu[CpuNo].process->arrivaltime);
-                char* proc[5]={"Out",Pcount,Arrival,CpuNum,0};//check it
-                execve("Out",proc,NULL);
+                char* proc[5]={"output",Pcount,Arrival,CpuNum,0};//check it
+                int x=execv("../Output/dist/Debug/GNU-Linux/output",proc);
+                printf("\n%d",x);
             }
+            Cpu[CpuNo].process-> pid=PID;
             MemoryAvailable -= Cpu[CpuNo].process-> size;            
         }
         else
@@ -174,15 +193,18 @@ void Dispatcher::RunProcess(int CpuNo)
             //send data
             msgbuff m;
             m.mtype = Cpu[CpuNo].process-> pid;
-            m.mtext[0] = 'C';
-            m.mtext[1] = 'P';
-            m.mtext[2] = 'U';
-            m.mtext[3]=CpuNo;
-            int sendcheck = msgsnd(ToProcQueue,&m,sizeof(struct msgbuff),!IPC_NOWAIT);
+            m.mtext[0] = 'c';
+            m.mtext[1] = 'p';
+            m.mtext[2] = 'u';
+            m.mtext[3] = '_';
+            m.mtext[4]=CpuNo+1+'0';
+            m.mtext[5]='\0';
+            int sendcheck = msgsnd(ToProcQueue,&m,sizeof(m.mtext),!IPC_NOWAIT);
             if(sendcheck==-1)
                 cout<<"\nsending failed";
             //signal process to continue
-            kill(Cpu[CpuNo].process-> pid,SIGUSR1);
+            sleep(2);
+            kill(Cpu[CpuNo].process-> pid,SIGCONT);
         }    
     }
 }
@@ -214,21 +236,33 @@ void Dispatcher::PrepareProcess(int CpuNo)
 void Dispatcher::Dispatch()
 {   
     CPUs NewInserted[2];
-    SendInteger FIO;
+    for(int i=0;i<2;i++){
+        NewInserted[i].process=NULL;
+        NewInserted[i].RemainingCycle=0;
+        Cpu[i].RemainingCycle=0;
+        Cpu[i].process=NULL;
+        Switch[i].process=NULL;
+        Switch[i].RemainingCycle=0;
+    }
+    IOs FIO;
     FIO.mtype = flg;
-    SendInteger FIORec;
+    FIO.RemainingCycle=0;
+    IOs  FIORec;
     FIORec.mtype= flg;
     bool NI ;
     int sizercv;
     while(KilledProcNo!=TotProcessesNo)
     {   
         NI=false;
-        //read flag of inserted**
+        
         while(*flaginserted==0);
-        sizercv = msgrcv(FromIOQueue,&FIORec,sizeof(SendInteger),FIORec.mtype,!IPC_NOWAIT);
+            if(*flaginserted==-1){
+                *flaginserted=0;
+        }
+        sizercv = msgrcv(FromIOQueue,&FIORec,sizeof(IOs),FIORec.mtype,!IPC_NOWAIT);
             if(sizercv == -1)
                 cout << "\nreceiving failed!";
-        if(FIORec.flag>0||*flaginserted>0)//||flag inserted greater than zero
+        if(FIORec.RemainingCycle>0||*flaginserted>0)
         {
             NI=true;
             for(int j = 0; j < 2; j++)
@@ -238,8 +272,16 @@ void Dispatcher::Dispatch()
                 else
                     NewInserted[j].process = Cpu[j].process;
                 if(Cpu[j].process!=NULL)
+                {
                     Cpu[j].process->arr[Cpu[j].process->index].time--;
-            }      
+                    Cpu[j].RemainingCycle--;
+                    if(Cpu[j].RemainingCycle==0)
+                    {
+                        NewInserted[j].process=NULL;
+                    }
+                }
+            }
+            Schd->InsertNewReady(&NewInserted[0],&NewInserted[1],&BlockedForMemory,MemoryAvailable,FIORec.RemainingCycle);
         }
         for(int i = 0; i < 2; i++)
         {
@@ -254,8 +296,10 @@ void Dispatcher::Dispatch()
                 }
                 if(Cpu[i].RemainingCycle==0)
                 {
-                    if(SendToIO[i]!=NULL)//send to IO
+                    if(SendToIO[i]!=NULL){//send to IO
                         SendProcToIO(i,FIO);
+                        FIO.RemainingCycle++;
+                    }
                     
                     if(Switch[i].process == NULL)
                         PrepareProcess(i);
@@ -267,8 +311,10 @@ void Dispatcher::Dispatch()
             else if(Cpu[i].process!=NULL)//if a process was running on the CPU
             {
                 if(!NI)
+                {
                     Cpu[i].process->arr[Cpu[i].process->index].time--;
-                Cpu[i].RemainingCycle--;
+                    Cpu[i].RemainingCycle--;
+                }
                 if(NewInserted[i].process==NULL)
                 {
                     if(Cpu[i].RemainingCycle == 0)//if the cycle is over
@@ -295,33 +341,35 @@ void Dispatcher::Dispatch()
                 RunProcess(i);
             }
         }
-                
-        int sendcheck = msgsnd(ToIOQueue,&FIO,sizeof(SendInteger),!IPC_NOWAIT);
+        FIO.mtype=flg;
+        printf("\nsending %hd as flag",FIO.RemainingCycle);
+        int sendcheck = msgsnd(ToIOQueue,&FIO,sizeof(IOs),!IPC_NOWAIT);
         if(sendcheck==-1)
-            cout<<"\nsending failed";
-        FIO.flag=0;
-        pause();
+            cout<<"\nsending to io failed";
+        FIO.RemainingCycle=0;
+        //pause();
+        raise(SIGSTOP);
     }
     ofstream MyFile;
     MyFile.open("CPU_1.txt",ios::app);   
-    MyFile<<"\nCPU Utilization = "<<CpuUtaliz[0]/((*Counter)-1);
+    MyFile<<"\nCPU Utilization = "<<CpuUtaliz[0]/(float)((*Counter)-1);
     MyFile.close();
     
     MyFile.open("CPU_2.txt",ios::app);   
-    MyFile<<"\nCPU Utilization = "<<CpuUtaliz[1]/((*Counter)-1);
+    MyFile<<"\nCPU Utilization = "<<CpuUtaliz[1]/(float)((*Counter)-1);
     MyFile.close();
     
     MyFile.open("Stat.txt",ios::trunc);
     //create the other file to write into **
-    int AvgWTA=0,AvgWait=0,Std=0;
+    float AvgWTA=0,AvgWait=0,Std=0;
     for(int i = 0 ; i < TotProcessesNo ; i++)
     {
         AvgWTA+=KilledP[i].WTA;
         AvgWait+=KilledP[i].Wait;
         
     }
-    AvgWTA=AvgWTA/TotProcessesNo;
-    AvgWait=AvgWait/TotProcessesNo;
+    AvgWTA=AvgWTA/(float)TotProcessesNo;
+    AvgWait=AvgWait/(float)TotProcessesNo;
     MyFile<<"\nAverage WTA = "<<AvgWTA;
     MyFile<<"\nAverage Wait = "<<AvgWait<<"\n";
     for(int i = 0 ; i < TotProcessesNo ; i++){
@@ -348,24 +396,36 @@ void Dispatcher::InsertNew(CPU PNew,Process * POnCpu,int CpuNo)
     Cpu[CpuNo].RemainingCycle = ContextSwitchingTime;        
     Switch[CpuNo]=PNew;
 }
-int main(){
+Dispatcher* Disp;
+void Terminate(int);
+int main(int argc, char** argv){
     int init=msgget(QKey,IPC_CREAT|0666);
     Config con;
     msgrcv(init,&con,sizeof(Config),0,!IPC_NOWAIT);
+    msgctl(init,IPC_RMID,0);
+    printf("\nDispatcher");
     Scheduler* Sched=NULL;
     switch(con.Numbers[1]){
         case(1):
                 Sched= new RoundRobin(con.Numbers[3],con.Numbers[0]);
+                break;
         case(2):
                 Sched= new STRN();
+                break;
         case(3):
                 Sched= new HPF();
+                break;
         case(4):
                 Sched= new OurAlgo(con.Numbers[2]);
+                break;
                         
     }
-    Dispatcher* Disp=new Dispatcher(con.Numbers[2],2000000,con.Numbers[0],Sched);
+    Disp=new Dispatcher(con.Numbers[2],2000000,con.Numbers[0],Sched);
     Disp->Dispatch();
+    delete Disp;
+    kill(getpgrp(),SIGINT);
+}
+void Terminate(int){
     delete Disp;
 }
 

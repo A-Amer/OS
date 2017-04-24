@@ -11,6 +11,6 @@
 #define SharedQ     0x500// done processes(for statistics)
 #define FlagKey     0x200//When a new process is added
 #define ProcArrKey  0x12345//Processes added by process generator
-
+#define SemKey      200
 #endif /* DEFINES_H */
 

@@ -8,6 +8,11 @@ void STRN:: InsertReady(Proc* process){
 }
 CPUs STRN::Schedule(short CpuNo){
     CPUs c;
+    if(l.head==NULL){
+        c.RemainingCycle=0;
+        c.process=NULL;
+        return c;
+    }
     int Locindex=l.head->p->index;
     int RunTime=l.head->p->arr[Locindex].time;
     int min=RunTime;
@@ -57,198 +62,55 @@ CPUs STRN::Schedule(short CpuNo){
    return c;
 }
 
-//void STRN::InsertNewReady(CPU c1,CPU c2, LinkedList BlockedList)
-//{
-//        Proc * p1 = c1.process;
-//        Proc * p2 = c2.process;     
-//	Proc *ptr=ptail-flag;
-//        int insertionFlag=flag;
-//	int minimum1,minimum2,temp;
-//	int pi;//ptr index
-//	int i1,i2,rt1,rt2; //current process index&runtime
-//	int rt;//runtime
-//	Proc * pt1;
-//	Proc *pt2;
-//Proc *ptemp;
-//
-//	i1=p1->index;
-//	i2=p2->index;
-//	rt1=p1->arr[i1].time;
-//	rt2=p2->arr[i2].time;
-//
-//	pi=ptr->index;
-//
-//	minimum1=ptr->arr[pi].time;
-//	pt1=ptr;
-//	if(flag==1)
-//	minimum2=-1;
-//	else
-//	{
-//	ptr++;
-//	pi=ptr->index;
-//	minimum2=ptr->arr[pi].time;
-//	pt2=ptr;
-//	ptr++;
-//	}
-//	flag--;
-//	flag--;
-//	if(minimum2!=-1)
-//	{
-//		if(minimum2<minimum1)
-//		{
-//		 temp=minimum1;
-//		minimum1=minimum2;
-//		minimum2=temp;
-//                ptemp=pt1;
-//		pt1=pt2;
-//		pt2=pt1;
-//
-//		}
-//
-//
-//	}
-//
-//	while(flag>0)
-//	{
-//		pi=ptr->index;
-//		rt=ptr->arr[pi].time;
-//		if(rt<minimum1)
-//		{
-//		
-//		minimum2=minimum1;
-//		minimum1=rt;
-//		pt2=pt1;
-//		pt1=ptr;
-//
-//		}
-//		else if(rt<minimum2)
-//		{
-//		minimum2=rt;
-//		pt2=ptr;
-//		}
-//		ptr++;
-//		flag--;
-//	}
-//
-//	//CHOOSING WHICH WILL STAY FROM CURRENT    //remains insertion
-//	if(minimum1<rt1)
-//	{
-//		p1=pt1;
-//		if(minimum2<rt2 && minimum2!=-1)
-//		{
-//			p2=pt2;
-//		      ptr=ptail-insertionFlag;
-//		       insertionFlag= insertionFlag-2;  // aLL INSERTED EXCEPT 2
-//		      while(insertionFlag>0)
-//			{
-//			       if(ptr!=p1 && ptr!=p2)
-//				   {
-//				l.Insert(ptr);
-//				ptr++;
-//
-//				insertionFlag--;
-//
-//				    }
-//                                ptr++;
-//			  }
-//		}
-//
-//		else   //all except 1
-//		{
-//		       p2=NULL;
-//
-//                       ptr=ptail-insertionFlag;
-//		       insertionFlag= insertionFlag-1;  // aLL INSERTED EXCEPT 1
-//		      while(insertionFlag>0)
-//			{
-//			       if(ptr!=p1)
-//				   {
-//				l.Insert(ptr);
-//				ptr++;
-//
-//				insertionFlag--;
-//
-//				    }
-//                                ptr++;
-//			  }
-//		}
-//	}
-//	else if(minimum1<rt2)
-//	{
-//      
-//		p2=pt1;
-//                  ptr=ptail-insertionFlag;
-//		       insertionFlag= insertionFlag-1;  // aLL INSERTED EXCEPT 1
-//		      while(insertionFlag>0)
-//			{
-//			       if(ptr!=p2)
-//				   {
-//				l.Insert(ptr);
-//				ptr++;
-//
-//				insertionFlag--;
-//
-//				    }
-//                                ptr++;
-//			  }
-//
-//		p1=NULL;
-//	}
-//     else
-//	{
-//         //if both remain NULL so insert all new into ready queue
-//            ptr=ptail-insertionFlag;
-//           while(insertionFlag>0)
-//             {
-//
-//             l.Insert(ptr);
-//             ptr++;
-//
-//             insertionFlag--;
-//
-//             }
-//             p1=NULL;
-//             p2=NULL;
-//             }
-//}
-
-void STRN::InsertNewReady(CPU c1, CPU c2, LinkedList BlockedList, int MemoryAvailable,int IOReturnNo)
+void STRN::InsertNewReady(CPU * c1, CPU * c2, LinkedList * BlockedList, int MemoryAvailable,int IOReturnNo)
 {
     Node * P1= NULL;
     Node * P2= NULL;
-    Proc *ptr=ProcessArr+index+1;
+    
+    //Proc *ptr=ProcessArr+index+1;
     
     int minimum1=0;
     int minimum2=0;
-    int temp;
+    int temp=*flag;
     LinkedList ChooseProc;
+    ChooseProc.head=NULL;
+    ChooseProc.tail=NULL;
+    ChooseProc.count=0;
     
-    while(*flag != 0)
+    
+    while(temp > 0)
     {
-        if(ptr->size>MemoryAvailable)
-            BlockedList.Insert(ptr);
+        if((ProcessArr+index+1)->size>MemoryAvailable)
+            BlockedList->Insert((ProcessArr+index+1));
         else
-            ChooseProc.Insert(ptr);
-        *flag--;
+            ChooseProc.Insert((ProcessArr+index+1));
+        temp--;
         index++;
-        ptr++;
+       // ptr++;
     }
     IOs device;//change this to proc struct
     int sizercv;
+    Node * s=ChooseProc.head;
     while(IOReturnNo != 0)
     {
         sizercv = msgrcv(FromIOQueue,&device,sizeof(IOs),0,!IPC_NOWAIT);
             if(sizercv == -1)
                 cout << "\nreceiving failed!";
-        ChooseProc.Insert(device.process);
+        int j=0;
+        while((ProcessArr+j)-> pid != device.process)
+            j++;
+        ProcessArr[j].index++;
+        ChooseProc.head=s;
+        ChooseProc.Insert(ProcessArr+j);
         IOReturnNo--;
+        s=ChooseProc.head;
     }
     
-    if(c1.process!=NULL)
-        ChooseProc.Insert(c1.process);
+    if(c1->process!=NULL)
+        ChooseProc.Insert(c1->process);
 
-    if(c2.process!=NULL)
-        ChooseProc.Insert(c2.process);
+    if(c2->process!=NULL)
+        ChooseProc.Insert(c2->process);
     
     Node * loopptr;
     if(ChooseProc.count == 1)
@@ -282,52 +144,82 @@ void STRN::InsertNewReady(CPU c1, CPU c2, LinkedList BlockedList, int MemoryAvai
             loopptr = loopptr->next;
         }
     }
-    if(c1.process==NULL&&c2.process==NULL)
+    if(P1==NULL)
+        return;
+    if(P2==NULL)
     {
-        c1.process=P1->p;
-        c1.RemainingCycle=minimum1;
-        c2.process=P2->p;
-        c2.RemainingCycle=minimum2;
+        if(c1->process!=NULL)
+            c1->process=NULL;
+        else if (c2->process!=NULL)
+            c2->process=NULL;
+        else
+        {
+            c1->process=P1->p;
+            c1->RemainingCycle=minimum1;
+        }
         return;
     }
-    else if(P2->p==NULL)
+    if(c1->process==NULL&&c2->process==NULL)
     {
-        c1.process=NULL;
-        c2.process=NULL;
+        c1->process=P1->p;
+        c1->RemainingCycle=minimum1;
+        c2->process=P2->p;
+        c2->RemainingCycle=minimum2;
         return;
     }
-    else if(c2.process==P1->p)
+    
+    else if(c2->process==P1->p)
     {
-        c2.process=NULL;
-        c1.process=P2->p;
-        c1.RemainingCycle = minimum2;
+        c2->process=NULL;
+        if(c1->process==P2->p)
+        {
+            c1->process=NULL;
+            return;
+        }
+        c1->process=P2->p;
+        c1->RemainingCycle = minimum2;
         return;
     }
-    else if(c2.process==P2->p)
+    else if(c2->process==P2->p)
     {
-        c2.process=NULL;
-        c1.process=P1->p;
-        c1.RemainingCycle = minimum1;
+        c2->process=NULL;
+        if(c1->process==P1->p)
+        {
+            c1->process=NULL;
+            return;
+        }
+        c1->process=P1->p;
+        c1->RemainingCycle = minimum1;
         return;
     }
-    else if(c1.process==P1->p)
+    else if(c1->process==P1->p)
     {
-        c1.process=NULL;
-        c2.process=P2->p;
-        c2.RemainingCycle = minimum2;
+        c1->process=NULL;
+        if(c2->process==P2->p)
+        {
+            c2->process=NULL;
+            return;
+        }
+        c2->process=P2->p;
+        c2->RemainingCycle = minimum2;
         return;
     }
-    else if(c1.process==P2->p)
+    else if(c1->process==P2->p)
     {
-        c1.process=NULL;
-        c2.process=P1->p;
-        c2.RemainingCycle = minimum1;
+        c1->process=NULL;
+        if(c2->process==P1->p)
+        {
+            c2->process=NULL;
+            return;
+        }
+        c2->process=P1->p;
+        c2->RemainingCycle = minimum1;
         return;
     }
-    c1.process=P1->p;
-    c1.RemainingCycle=minimum1;
-    c2.process=P2->p;
-    c2.RemainingCycle=minimum2;
+    c1->process=P1->p;
+    c1->RemainingCycle=minimum1;
+    c2->process=P2->p;
+    c2->RemainingCycle=minimum2;
     return;
     
 }

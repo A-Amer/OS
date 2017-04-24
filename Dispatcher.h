@@ -25,7 +25,7 @@ public:
     void EndOfSeq(Process * P, int CpuNo);
     void RunProcess(int CpuNo);
     void PrepareProcess(int CpuNo);
-    void SendProcToIO(int CpuNo,SendInteger FIO);
+    void SendProcToIO(int CpuNo,IOs FIO);
     void InsertNew(CPU PNew,Process * POnCpu,int CpuNo);
     void Dispatch();
     virtual ~Dispatcher();
@@ -40,7 +40,6 @@ private:
     LinkedList BlockedForMemory;
     
     int MemoryAvailable;
-    int ProcessCounter;
     int KilledProcNo;
     int TotProcessesNo;
     int ContextSwitchingTime;

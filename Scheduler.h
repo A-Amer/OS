@@ -6,10 +6,12 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include<sys/msg.h>
+#include<fstream>
 #include <unistd.h>
 #include"Defines.h"
 #include"LinkedList.h"
-
+#include"MessageQueue.h"
+using namespace std;
 
  
 class Scheduler{
@@ -20,7 +22,7 @@ protected:
     int FromIOQueue;
     int index;
 public:
-   virtual void InsertNewReady(CPU c1,CPU c2, LinkedList BlockedList, int MemoryAvailable,int IOReturnNo)=0;
+   virtual void InsertNewReady(CPU * c1,CPU * c2, LinkedList * BlockedList, int MemoryAvailable,int IOReturnNo)=0;
    virtual void InsertReady(Proc* process)=0;
    virtual CPUs Schedule(short CpuNo)=0; //CpuNo will be used by our algorithm(cpu1 io,cpu2 cpu)
       Scheduler(){

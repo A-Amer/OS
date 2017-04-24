@@ -7,22 +7,19 @@
 	char mtext[10];
     };
     struct KilledQ{
-        long mtype;
         int Wait,WTA;
         
     };
-    struct SendInteger{
-        long mtype;
-        int flag;
-    };
     struct SendProc{
         long mtype;
-        Proc* P;
+        Proc * process;
+        
     };
     typedef struct IoStruct { 
     long mtype;
-    int RemainingCycle;
-    Proc * process;
+    short RemainingCycle;
+    int process;
+
 }IOs;
 
 

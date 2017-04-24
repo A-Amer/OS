@@ -21,7 +21,8 @@ typedef struct Process //process parameters
     int pid;
     int priroity;
     int arrivaltime;
-
+    int Pnum;
+    
 }Proc;
 
 typedef struct CPU { 
